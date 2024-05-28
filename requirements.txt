@@ -1,0 +1,10 @@
+pandas
+ruff
+pytest
+assertpy
+fastapi
+uvicorn
+PyJWT
+kubernetes
+python-dotenv
+cryptography
