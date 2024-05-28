@@ -9,7 +9,7 @@ Scope of this POC is to validate a fine grained python permission model to:
 
 ## Permission model
 The `Permission` class defines the permission model in [permissions](./src/security/permissions.py) module and includes:
-* The protected `resources`, using the `AuthzedResource` model in [](./src/security/authzed_resource.py)
+* The protected `resources`, using the `AuthzedResource` model in [authzed_resource](./src/security/authzed_resource.py)
   * The `type` of protected resources
   * An optional `name_patterns` to filter the resource instances by name [**NOT IMPLEMENTED in this POC**]
   * An optional `required_tags` field to filter the resource instances by tags [**NOT IMPLEMENTED in this POC**]
@@ -30,8 +30,8 @@ the `READ` action:
 ```
 
 ## Protected domain
-Two resources are available, namely `ResourceA` and `ResourceB`, both in the [impl](./src/impl.py) module.
-They extend from a generic `Resource` class to expose `get_name`, `get_type` and `get_tags` methods.
+Two resource types are available, namely `ResourceA` and `ResourceB`, both in the [impl](./src/impl.py) module.
+They extend a generic `Resource` class to expose `get_name`, `get_type` and `get_tags` methods.
 
 Example of security configuration:
 ```py
@@ -40,7 +40,7 @@ Example of security configuration:
         print(f"Calling read_protected on {self.name}")
 ```
 
-The decorator defines the actions that must be permitted to the user.
+The `require_permissions` decorator defines the actions that must be permitted to the user.
 
 **Note**: even if not used in the POC, a programmatic security can be applied when the decorator pattern cannot be used, with the
 APIs defined in the `SecurityManager` class, in [security_manager](./src/security/security_manager.py) module
@@ -58,11 +58,18 @@ The POC models the following methods:
 |`ResourceB`    |`unprotected`|          |
 
 The realm modelled by the test environment is made of the following users:
-|User|Role|Allowed actions|
+|User|Roles|Allowed actions|
 |----|----|---------------|
 |`a-reader`|`a-reader`| `READ` on `ResourceA`|
 |`b-manager`|`b-reader`, `b-editor`| `READ` and `EDIT` on `ResourceB`|
 |`admin`|`a-reader`, `a-editor`, `b-reader`, `b-editor`| All actions on any resource|
+
+Finally, the configured permissions are:
+|Name|Resource type|Allowed actions|Required roles|
+|----|-------------|---------------|--------------|
+|`read-from-any-A` |`ResourceA`    | `READ`|`a-reader`|
+|`edit-any-A`      |`ResourceA`    | `EDIT`|`a-editor`|
+|`all-to-any-B`    |`ResourceB`    | `ALL` |`b-reader`, `b-editor`|
 
 ## Configuring the python environment
 Create virtual env:
@@ -204,7 +211,7 @@ Trying POST http://localhost:8000/b
 ### Architecture of KubernetesAuthManager
 This authentication manager is made of two components, both running in the same cluster:
 * The client invokes REST services sending the token of the associated `ServiceAccount` in the authorization bearer (*)
-* The server, implemented by `KubernetesAuthManager` defined in [kubernetes_auth_manager](./src/auth/kubernetes_auth_manager.py) is in chanrge of:
+* The server, implemented by `KubernetesAuthManager` defined in [kubernetes_auth_manager](./src/auth/kubernetes_auth_manager.py) is in charge of:
   * Detect the `ServiceAccount` name and namespace from the JWT token
   * Identify the `Role`s and `ClusterRole`s bound to the `ServiceAccount` (**)
   * Populate the `RoleManager` with the given roles for the current user with `sm.role_manager.add_roles_for_user(current_user, roles)`
@@ -220,7 +227,7 @@ Example of decoded JWT token:
  ...
  'sub': 'system:serviceaccount:feast:feast-notebook'}
 ```
-`sub` field (e.g. `subject`) identifies the `ServiceAccount` with name `feast-notebook` in namwespace `feast`
+`sub` field (e.g. `subject`) identifies the `ServiceAccount` with name `feast-notebook` in namespace `feast`
 
 (*) **Note**: we could define a module to enrich the `Feast` clients with an extension to automatically include the bearer token in every
 request to the server. This could result in an extra option in the repository configuration:
@@ -247,8 +254,8 @@ offline_store:
         username: 'username'
         password: 'password'
 ```
-(*) **Note**: because of the need to retrieve the `ClusterRole`s, the server needs to run with a Role allowing to fecth such instances.
-For now, we're using the `admin ClusterRole`
+(*) **Note**: because of the need to retrieve the `ClusterRole`s, the server needs to run with a role allowing it to fetch such instances.
+For now, we are using `admin ClusterRole`, but a dedicated `Role` can be revised and specifically defined.
 
 ### Deploying the POC app in kubernetes
 Use the provided [app.yaml](./app.yaml) to create the required resources in the current namespace:
@@ -284,6 +291,7 @@ AUTH_MANAGER=k8s make run-app
 ```
 
 A client notebook [poc-client.ipynb](./poc-client.ipynb) is provided for your convenience to run the client code.
+
 Install it on a Notebook in the same cluster and run the test to validate that a `Forbidden` error (403) is raised when
 we invoke a service wiythout having the required role.
 
