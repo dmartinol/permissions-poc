@@ -219,12 +219,13 @@ This authentication manager is made of two components, both running in the same 
 Example of decoded JWT token:
 ```json
 {
-  ...
+...
  'kubernetes.io': {'namespace': 'feast',
-  'pod': {'name': 'feast-notebook-0', ...},
-  'serviceaccount': {'name': 'feast-notebook', ...},
-  ...},
- ...
+  'pod': {'name': 'feast-notebook-0'},
+  'serviceaccount': {'name': 'feast-notebook'},
+...
+  },
+...
  'sub': 'system:serviceaccount:feast:feast-notebook'}
 ```
 `sub` field (e.g. `subject`) identifies the `ServiceAccount` with name `feast-notebook` in namespace `feast`
@@ -291,7 +292,6 @@ AUTH_MANAGER=k8s make run-app
 ```
 
 A client notebook [poc-client.ipynb](./poc-client.ipynb) is provided for your convenience to run the client code.
-
 Install it on a Notebook in the same cluster and run the test to validate that a `Forbidden` error (403) is raised when
 we invoke a service wiythout having the required role.
 
