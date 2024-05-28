@@ -135,7 +135,7 @@ The content of `.env` is used by the `KeycloakAuthManager` in [keycloak_auth_man
 * Populate the `RoleManager` with the given roles for the current user with `sm.role_manager.add_roles_for_user(current_user, roles)`
 
 Example of access token:
-```json
+```
 {
 ...
   "aud": "account",
@@ -217,7 +217,7 @@ This authentication manager is made of two components, both running in the same 
   * Populate the `RoleManager` with the given roles for the current user with `sm.role_manager.add_roles_for_user(current_user, roles)`
 
 Example of decoded JWT token:
-```json
+```
 {
 ...
  'kubernetes.io': {'namespace': 'feast',
@@ -226,7 +226,8 @@ Example of decoded JWT token:
 ...
   },
 ...
- 'sub': 'system:serviceaccount:feast:feast-notebook'}
+ 'sub': 'system:serviceaccount:feast:feast-notebook'
+}
 ```
 `sub` field (e.g. `subject`) identifies the `ServiceAccount` with name `feast-notebook` in namespace `feast`
 
