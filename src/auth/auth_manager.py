@@ -17,3 +17,8 @@ class AuthManager(ABC):
         user ID and roles to be propagated to the security layer).
         """
         pass
+
+
+class AllowAll(AuthManager):
+    async def inject_user_data(self, request: Request) -> Any:
+        return True

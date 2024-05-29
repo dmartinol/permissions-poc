@@ -18,7 +18,7 @@ run-test: ## Run test client
 	./test.sh
 
 start-keycloak: ## Start Keycloak container with admin/admin user
-	docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:24.0.4 start-dev
+	docker run --rm -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:24.0.4 start-dev
 
 setup-keycloak: ## Setup Keycloak with a "poc" realm and an "app" client
 	python keycloak_setup.py

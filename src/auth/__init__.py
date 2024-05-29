@@ -1,4 +1,4 @@
-from auth.auth_manager import AuthManager
+from auth.auth_manager import AuthManager, AllowAll
 from auth.keycloak_auth_manager import KeycloakAuthManager
 from auth.kubernetes_auth_manager import KubernetesAuthManager
 import os
@@ -21,7 +21,7 @@ def _init_auth_manager():
     elif auth_manager == "k8s":
         _auth_manager = KubernetesAuthManager()
     else:
-        _auth_manager = AuthManager()
+        _auth_manager = AllowAll()
     _auth_manager.init()
 
 
