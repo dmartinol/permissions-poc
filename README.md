@@ -309,11 +309,13 @@ oc rsh $POD_NAME
 
 Once in the Pod console, run the following to initialize the environment:
 ```console
+bash
 cd /tmp
 mkdir app
 cd app
 unzip ../app.zip
 python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -329,7 +331,7 @@ we invoke a service wiythout having the required role.
 
 ## What's next-Possible extensions
 * The proposed Security Model is meant to define the policies to permit the execution of given actions on the selected resources.
-  Do we also need a policy to deny the execution, based on the same selection criteria? E.g. do we need a `decision` field to model
+  Do we also need a policy to deny the execution instead, based on the same selection criteria? E.g. do we need a `decision` field to model
   the behavior?
 ```py
     Permission(
@@ -340,10 +342,9 @@ we invoke a service wiythout having the required role.
         actions=[AuthzedAction.ALL],
     )
 ```
-* Given a request to execute an action on a protected resource, we may have multiple permissions matching the resource instance (by type
-  and additional name and tags filters). What is the behavior of the permission authorization in this case?
-  * The action is allowed if at least one permission's decision is to allow it
-  * The action is allowed if all the matching permissions allow it
-  * The action is denied if at least one permission's decision is to deny it (previous point)
-
-
+* Given a request to execute an action on a protected resource, we may have multiple permissions matching a resource instance (by type
+  and additional name and tags filters). What is the behavior of the permission authorization in this case? Do we need another `decision_strategy`
+  field at global level that can be used in the feature store configuration to dictate the behavior?
+```py
+    permission.set_global_decision_strategy(DecisionStrategy.UNANIMOUS)
+```
