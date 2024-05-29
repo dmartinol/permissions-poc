@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python Debugger: FastAPI",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "cwd": "${workspaceFolder}/src",
+      "args": [
+        "app:app",
+        "--reload",
+        "--host",
+        "0.0.0.0"
+      ],
+      "env": {
+        "AUTH_MANAGER": "keycloak"
+      },
+      "jinja": true
+    }
+  ]
+}
