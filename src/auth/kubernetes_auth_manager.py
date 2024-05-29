@@ -5,7 +5,7 @@ from security.security_manager import (
     _set_security_manager,
     _get_security_manager,
 )
-from security.role_manager import _get_role_manager
+from security.role_manager import RoleManager
 from auth.auth_manager import AuthManager
 from typing import List, Dict, Any
 from fastapi import Request
@@ -18,6 +18,15 @@ from kubernetes import client, config
 
 
 class KubernetesAuthManager(AuthManager):
+    """
+    An `AuthManager` implementation to use Kubernetes RBAC resources to retrieve the user details.
+    The assumption is that the request header includes an authorization bearer with the token of the
+    client `ServiceAccount`.
+    By inspecting the role bindings, this `AuthManager` extract the associated `Role`s and use them
+    to populate the `RoleManager`.
+    The client `ServiceAccount` is instead used as the user ID.
+    """
+
     def __init__(self):
         config.load_incluster_config()
         self.v1 = client.CoreV1Api()
@@ -25,7 +34,7 @@ class KubernetesAuthManager(AuthManager):
 
     def init(self):
         sm = SecurityManager(
-            role_manager=_get_role_manager(),
+            role_manager=RoleManager(),
             policy_enforcer=PolicyEnforcer(),
             permissions=setup_permissions(),
         )

@@ -42,6 +42,7 @@ read -p "Is it a secured service? (y/n): " IS_SECURED
 if [ "$IS_SECURED" == "y" ]; then
   read -p "Enter your username: " USERNAME
   access_token=$(read_token "$USERNAME")
+  echo "Got token!"
   if [ "$access_token" == "null" ]; then
     echo "Failed to get access token"
     exit 1

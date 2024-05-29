@@ -8,6 +8,10 @@ from security.policy import RoleBasedPolicy
 
 
 def setup_permissions():
+    """
+    Create the sample permissions for the POC application.
+    """
+
     permissions = []
     permissions.append(
         Permission(

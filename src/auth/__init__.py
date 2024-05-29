@@ -2,13 +2,17 @@ from auth.auth_manager import AuthManager
 from auth.keycloak_auth_manager import KeycloakAuthManager
 from auth.kubernetes_auth_manager import KubernetesAuthManager
 import os
-from typing import Any
 from fastapi import Request
+from typing import Any
 
 _auth_manager: AuthManager = None
 
 
 def _init_auth_manager():
+    """
+    Factory function: initializes the global `AuthManager` instance according to the value of the `Auth_MANAGER` env variable.
+    """
+
     global _auth_manager
     auth_manager = os.getenv("AUTH_MANAGER", "").lower()
     print(f"Creating AuthManager for {auth_manager}")
@@ -22,6 +26,10 @@ def _init_auth_manager():
 
 
 def get_auth_manager_instance() -> AuthManager:
+    """
+    The global `AuthManager` instance.
+    """
+
     global _auth_manager
     if _auth_manager is None:
         raise RuntimeError(
@@ -31,6 +39,10 @@ def get_auth_manager_instance() -> AuthManager:
 
 
 async def inject_user_data(request: Request) -> Any:
+    """
+    A global function to delegate the injection of user data to the global `AuthManager` instance.
+    """
+
     return await get_auth_manager_instance().inject_user_data(request)
 
 

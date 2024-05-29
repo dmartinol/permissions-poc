@@ -7,15 +7,19 @@ Scope of this POC is to validate a fine grained python permission model to:
   * OIDC, using Keycloak
   * K8s RBAC
 
+This POC is designed to propose an implementation for the `Feast Security model`, as defined in 
+[issue #4198](https://github.com/feast-dev/feast/issues/4198)
+
 ## Permission model
-The `Permission` class defines the permission model in [permissions](./src/security/permissions.py) module and includes:
+The `Permission` class defines the permission model in the [permissions](./src/security/permissions.py) module and includes:
 * The protected `resources`, using the `AuthzedResource` model in [authzed_resource](./src/security/authzed_resource.py)
   * The `type` of protected resources
   * An optional `name_patterns` to filter the resource instances by name [**NOT IMPLEMENTED in this POC**]
   * An optional `required_tags` field to filter the resource instances by tags [**NOT IMPLEMENTED in this POC**]
 * The authorized `actions`, defined by the `AuthzedAction` enum in [permissions](./src/security/permissions.py) module
-* The authorization `policies`, defined by the `Policy` and `RoleBasedPolicy` in [policy](./src/security/policy.py) module
-  * `RoleBasedPolicy` specifies the roles that must be granted to the user to permit the execution of the given action(s)
+* The authorization `policies`, defined by the abstract class `Policy` in the [policy](./src/security/policy.py) module
+  * The same module defines the `RoleBasedPolicy` implementation, where the authorization policy is determined by the user roles 
+  required to execute the given action(s).
 * The `decision strategy` to adopt in case of multiple matching policies [**NOT IMPLEMENTED in this POC**]
 
 Example of `Permission` to specify that resources of type `A` requires the user to grant the `a-reader` role in order to execute
@@ -45,8 +49,34 @@ The `require_permissions` decorator defines the actions that must be permitted t
 **Note**: even if not used in the POC, a programmatic security can be applied when the decorator pattern cannot be used, with the
 APIs defined in the `SecurityManager` class, in [security_manager](./src/security/security_manager.py) module
 
-## Permission configuration
-The POC models the following methods:
+## Security modules
+The security modules include:
+* The `RoleManager` class, to manage the roles of the users requesting the access to protected methods and functions.
+* The `Policy` and `RoleBasedPolicy` classes, to validate the authorization grants for a given user.
+* The `PolicyEnforcer` class, to evaluate the authorization decision for a given user request.
+* The `SecurityManager` class, to act as a global manager to all the security components.
+* The `require_permissions` decorator.
+
+## Authorization modules
+The authorization modules are designed to be used in applications exposing HTTP services:
+* The `AuthManager` abstract class, with an `inject_user_data` global function to extract the user details from the current request.
+* The `KeycloakAuthManager` implementation, using a configurable Keycloak OIDC server to extract the user details.
+* The `KubernetesAuthManager` implementation, using the Kubernetes RBAC resources to extract the user details.
+
+Example of authorization configuration in a REST endpoint:
+```py
+@app.get("/a", dependencies=[Depends(inject_user_data)])
+async def read_A():
+    a.read_protected()
+
+    return {"message": "read_A"}
+```
+
+Similarly, this implementation can be adapted for use with gRPC-based servers [**NOT IMPLEMENTED in this POC**].
+
+## Running the POC
+### Permission configuration
+The POC defines the following resources and methods:
 
 |Resource type|Method|Protected by action|
 |-------------|------|-------------------|
@@ -71,7 +101,7 @@ Finally, the configured permissions are:
 |`edit-any-A`      |`ResourceA`    | `EDIT`|`a-editor`|
 |`all-to-any-B`    |`ResourceB`    | `ALL` |`b-reader`, `b-editor`|
 
-## Configuring the python environment
+### Configuring the python environment
 Create virtual env:
 ```console
 python -m venv venv
@@ -88,7 +118,7 @@ Validate the app with unit tests:
 make test
 ```
 
-## Run the insecure app
+### Run the insecure app
 ```console
 AUTH_MANAGER="" make run-app
 ```
@@ -120,9 +150,9 @@ Trying POST http://localhost:8000/
 {"message":"post_unprotected"}
 ```
 
-## Run app secured by Keycloak
+### Run app secured by Keycloak
 
-### Setup Keycloak
+#### Setup Keycloak
 Start Keycloak from a container image and initialize a `poc` realm with `app` client and some users:
 ```
 make start-keycloak
@@ -160,7 +190,7 @@ Example of access token:
 }
 ```
 
-### Run app with Keycloak OIDC
+#### Run app with Keycloak OIDC
 Use the `AUTH_MANAGER` variable to setup the Keycloak authentication manager:
 ```console
 AUTH_MANAGER=keycloak make run-app
@@ -207,8 +237,8 @@ Trying POST http://localhost:8000/b
 {"message":"edit_B"}
 ```
 
-## Run app secured by Kubernetes tokens
-### Architecture of KubernetesAuthManager
+### Run app secured by Kubernetes tokens
+#### Architecture of KubernetesAuthManager
 This authentication manager is made of two components, both running in the same cluster:
 * The client invokes REST services sending the token of the associated `ServiceAccount` in the authorization bearer (*)
 * The server, implemented by `KubernetesAuthManager` defined in [kubernetes_auth_manager](./src/auth/kubernetes_auth_manager.py) is in charge of:
@@ -259,7 +289,7 @@ offline_store:
 (*) **Note**: because of the need to retrieve the `ClusterRole`s, the server needs to run with a role allowing it to fetch such instances.
 For now, we are using `admin ClusterRole`, but a dedicated `Role` can be revised and specifically defined.
 
-### Deploying the POC app in kubernetes
+#### Deploying the POC app in kubernetes
 Use the provided [app.yaml](./app.yaml) to create the required resources in the current namespace:
 * A `poc-app` deployment
 * All the managed `Role`s
@@ -297,5 +327,23 @@ Install it on a Notebook in the same cluster and run the test to validate that a
 we invoke a service wiythout having the required role.
 
 
+## What's next-Possible extensions
+* The proposed Security Model is meant to define the policies to permit the execution of given actions on the selected resources.
+  Do we also need a policy to deny the execution, based on the same selection criteria? E.g. do we need a `decision` field to model
+  the behavior?
+```py
+    Permission(
+        name="deny-from-any-A",
+        decision=PermissionDecision.DENY
+        resources=[AuthzedResource(type=AuthzedResourceType.A)],
+        policies=[RoleBasedPolicy(roles=["basic-user"])],
+        actions=[AuthzedAction.ALL],
+    )
+```
+* Given a request to execute an action on a protected resource, we may have multiple permissions matching the resource instance (by type
+  and additional name and tags filters). What is the behavior of the permission authorization in this case?
+  * The action is allowed if at least one permission's decision is to allow it
+  * The action is allowed if all the matching permissions allow it
+  * The action is denied if at least one permission's decision is to deny it (previous point)
 
 

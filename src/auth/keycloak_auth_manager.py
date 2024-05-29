@@ -5,7 +5,7 @@ from security.security_manager import (
     _set_security_manager,
     _get_security_manager,
 )
-from security.role_manager import _get_role_manager
+from security.role_manager import RoleManager
 from fastapi import HTTPException, Request
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from auth.auth_manager import AuthManager
@@ -27,9 +27,17 @@ oauth_2_scheme = OAuth2AuthorizationCodeBearer(
 
 
 class KeycloakAuthManager(AuthManager):
+    """
+    An `AuthManager` implementation to use Keycload OIDC to retrieve user details.
+    Uses the local `.env` file to load the Keycloak server settings:
+    - `KEYCLOAK_URL`
+    - `REALM`
+    - `CLIENT_ID`
+    """
+
     def init(self):
         sm = SecurityManager(
-            role_manager=_get_role_manager(),
+            role_manager=RoleManager(),
             policy_enforcer=PolicyEnforcer(),
             permissions=setup_permissions(),
         )
@@ -42,6 +50,11 @@ class KeycloakAuthManager(AuthManager):
         CLIENT_ID = os.getenv("CLIENT_ID")
 
     async def inject_user_data(self, request: Request) -> Any:
+        """
+        Fetches an access token for the configured client, then decodes it to extract the
+        user credential and roles.
+        """
+
         access_token = await oauth_2_scheme(request=request)
         global KEYCLOAK_URL
         global REALM

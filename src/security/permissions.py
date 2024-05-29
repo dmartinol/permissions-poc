@@ -7,18 +7,31 @@ from resources import Resource
 
 
 class AuthzedAction(enum.Enum):
+    """
+    To identify the type of action, according to the familiar CRUD terminology.
+    """
+
     ALL = "all"
     READ = "read"
-    EDIT = "edit"
+    EDIT = "edit"  # Create-Update-Delete
 
 
 class DecisionStrategy(enum.Enum):
+    """
+    The strategy to be adopted in case of multiple policies are defined.
+    """
+
     UNANIMOUS = "unanimous"
     AFFIRMATIVE = "affirmative"
     CONSENSUS = "consensus"
 
 
 class Permission:
+    """
+    The Permission class defines the authorization policies to be validated whenever the identified actions are
+    requested on the matching resources.
+    """
+
     def __init__(
         self,
         name: str,

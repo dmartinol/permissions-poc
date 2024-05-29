@@ -7,6 +7,13 @@ from security.role_manager import RoleManager
 
 
 def require_permissions(actions: Optional[List[AuthzedAction]] = [AuthzedAction.ALL]):
+    """
+    A decorator to define the actions that are executed from within the current class method and that must be protected
+    against unauthorized access.
+
+    The first parameter of the protected method must be `self`
+    """
+
     def require_permissions_decorator(func):
         def permission_checker(*args, **kwargs):
             print(f"permission_checker for {args}, {kwargs}")
@@ -36,7 +43,10 @@ def require_permissions(actions: Optional[List[AuthzedAction]] = [AuthzedAction.
 
 
 class SecurityManager:
-    """The security manager"""
+    """
+    The security manager holds references to the security components (role manager, policy enforces) and the configured permissions.
+    It is accessed and defined using the global functions :func:`_get_security_manager` and :func:`_set_security_manager`
+    """
 
     def __init__(
         self,

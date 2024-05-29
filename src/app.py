@@ -8,6 +8,10 @@ app = FastAPI()
 
 @app.exception_handler(PermissionError)
 async def permission_error_handler(request: Request, exc: PermissionError):
+    """
+    Exception handler to transform PermissionError exceptions into HTTP 403 Forbidden responses,
+    including the original error message in the response.
+    """
     print(f"permission_error_handler {exc}")
     return JSONResponse(
         status_code=403,

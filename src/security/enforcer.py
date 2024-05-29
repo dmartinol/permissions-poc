@@ -6,6 +6,11 @@ from security.role_manager import RoleManager
 
 
 class PolicyEnforcer:
+    """
+    PolicyEnforcer defines the logic to apply the configured permissions when a given action is requested on
+    a protected resource.
+    """
+
     def enforce_policy(
         self,
         role_manager: RoleManager,
@@ -23,7 +28,9 @@ class PolicyEnforcer:
                 if p.match_actions(actions):
                     print(f"Matches actions {actions}")
                     for policy in p.policies:
-                        result, explain = policy.validate_user(user)
+                        result, explain = policy.validate_user(
+                            user, role_manager=role_manager
+                        )
                         # TODO manage decision strategy
                         message = ""
                         if not result:
@@ -35,10 +42,3 @@ class PolicyEnforcer:
                     print(f"**PERMISSION ERROR**: {message}")
                 # TODO: manage multiple matching permissions
         return (False, "")
-
-
-_enforcer = None
-
-
-def _get_enforcer() -> PolicyEnforcer:
-    global _enforcer

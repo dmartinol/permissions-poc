@@ -6,12 +6,12 @@ from security.permissions import AuthzedAction, Permission
 from security.policy import RoleBasedPolicy
 from security.security_manager import SecurityManager, _set_security_manager
 from impl import ResourceA, ResourceB
-from security.role_manager import _get_role_manager
+from security.role_manager import RoleManager
 
 
 @pytest.fixture
 def role_manager():
-    rm = _get_role_manager()
+    rm = RoleManager()
     rm.add_roles_for_user("a-reader", ["a-reader"])
     rm.add_roles_for_user("b-manager", ["b-reader", "b-editor"])
     rm.add_roles_for_user("admin", ["a-reader", "a-editor", "b-reader", "b-editor"])

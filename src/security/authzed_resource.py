@@ -3,12 +3,21 @@ from typing import List, Optional, Dict
 
 
 class AuthzedResourceType(enum.Enum):
+    """
+    An enum with all the protected resource typoes
+    """
+
     ALL = "all"
     A = "A"
     B = "B"
 
 
 class AuthzedResource:
+    """
+    The AuthzedResource identifies the protected resources by class type and optional filters
+    based on the resource name and tags
+    """
+
     def __init__(
         self,
         type: AuthzedResourceType,
