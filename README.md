@@ -83,7 +83,7 @@ The security modules include:
 ## Authorization modules
 The authorization modules are designed to be used in applications exposing HTTP services:
 * The `AuthManager` abstract class, with an `inject_user_data` global function to extract the user details from the current request.
-* The `KeycloakAuthManager` implementation, using a configurable Keycloak OIDC server to extract the user details.
+* The `OidcAuthManager` implementation, using a configurable OIDC server to extract the user details.
 * The `KubernetesAuthManager` implementation, using the Kubernetes RBAC resources to extract the user details.
 
 Example of authorization configuration in a REST endpoint:
@@ -208,7 +208,7 @@ Trying POST http://localhost:8000/
 }
 ```
 
-### Run app secured by Keycloak
+### Run app secured by Keycloak OIDC
 
 #### Setup Keycloak
 Start Keycloak from a container image and initialize a `poc` realm with `app` client and some users:
@@ -217,7 +217,7 @@ make start-keycloak
 make setup-keycloak
 cat.env
 ```
-The content of `.env` is used by the `KeycloakAuthManager` in [keycloak_auth_manager](./src/auth/keycloak_auth_manager.py) to:
+The content of `.env` is used by the `OidcAuthManager` in [oidc_auth_manager](./src/auth/oidc_auth_manager.py) to:
 * Validate the authentication bearer token
 * Extract the user credentials and roles from the token
 * Populate the `RoleManager` with the given roles for the current user with `sm.role_manager.add_roles_for_user(current_user, roles)`
@@ -249,9 +249,9 @@ Example of access token:
 ```
 
 #### Run app with Keycloak OIDC
-Use the `AUTH_MANAGER` variable to setup the Keycloak authentication manager:
+Use the `AUTH_MANAGER` variable to setup the OIDC authentication manager:
 ```console
-AUTH_MANAGER=keycloak make run-app
+AUTH_MANAGER=oidc make run-app
 ```
 
 Test with:
@@ -378,7 +378,7 @@ offline_store:
     host: localhost
     port: 8815
     auth:
-        type: keycloak
+        type: oidc
         server: 'http://0.0.0.0:8080'
         realm: 'poc'
         client-id: 'app'

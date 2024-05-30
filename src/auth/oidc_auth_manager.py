@@ -15,22 +15,22 @@ from typing import Any
 from dotenv import load_dotenv
 import os
 
-KEYCLOAK_URL: str = ""
+OIDC_SERVER_URL: str = ""
 REALM: str = ""
 CLIENT_ID: str = ""
 
 oauth_2_scheme = OAuth2AuthorizationCodeBearer(
-    tokenUrl=f"{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/token",
-    authorizationUrl=f"{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/auth",
-    refreshUrl=f"{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/token",
+    tokenUrl=f"{OIDC_SERVER_URL}/realms/{REALM}/protocol/openid-connect/token",
+    authorizationUrl=f"{OIDC_SERVER_URL}/realms/{REALM}/protocol/openid-connect/auth",
+    refreshUrl=f"{OIDC_SERVER_URL}/realms/{REALM}/protocol/openid-connect/token",
 )
 
 
-class KeycloakAuthManager(AuthManager):
+class OidcAuthManager(AuthManager):
     """
     An `AuthManager` implementation to use Keycload OIDC to retrieve user details.
-    Uses the local `.env` file to load the Keycloak server settings:
-    - `KEYCLOAK_URL`
+    Uses the local `.env` file to load the OIDC server settings:
+    - `OIDC_SERVER_URL`
     - `REALM`
     - `CLIENT_ID`
     """
@@ -44,8 +44,8 @@ class KeycloakAuthManager(AuthManager):
         _set_security_manager(sm)
 
         load_dotenv("../.env")
-        global KEYCLOAK_URL, REALM, CLIENT_ID
-        KEYCLOAK_URL = os.getenv("KEYCLOAK_URL")
+        global OIDC_SERVER_URL, REALM, CLIENT_ID
+        OIDC_SERVER_URL = os.getenv("OIDC_SERVER_URL")
         REALM = os.getenv("REALM")
         CLIENT_ID = os.getenv("CLIENT_ID")
 
@@ -56,10 +56,10 @@ class KeycloakAuthManager(AuthManager):
         """
 
         access_token = await oauth_2_scheme(request=request)
-        global KEYCLOAK_URL
+        global OIDC_SERVER_URL
         global REALM
         global CLIENT_ID
-        url = f"{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/certs"
+        url = f"{OIDC_SERVER_URL}/realms/{REALM}/protocol/openid-connect/certs"
         print(url)
         optional_custom_headers = {"User-agent": "custom-user-agent"}
         jwks_client = PyJWKClient(url, headers=optional_custom_headers)

@@ -2,7 +2,7 @@ import requests
 import json
 from dotenv import set_key
 
-KEYCLOAK_URL = "http://0.0.0.0:8080"
+OIDC_SERVER_URL = "http://0.0.0.0:8080"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin"
 
@@ -10,7 +10,7 @@ access_token: str = ""
 
 
 def get_token():
-    token_url = f"{KEYCLOAK_URL}/realms/master/protocol/openid-connect/token"
+    token_url = f"{OIDC_SERVER_URL}/realms/master/protocol/openid-connect/token"
 
     token_data = {
         "grant_type": "password",
@@ -32,7 +32,7 @@ def get_token():
 
 
 def keycloak_post(endpoint, data=None):
-    url = f"{KEYCLOAK_URL}/admin/{endpoint}"
+    url = f"{OIDC_SERVER_URL}/admin/{endpoint}"
     print(f"Creating {endpoint}")
     global access_token
     headers = {
@@ -45,7 +45,7 @@ def keycloak_post(endpoint, data=None):
 
 
 def keycloak_get(endpoint):
-    url = f"{KEYCLOAK_URL}/admin/{endpoint}"
+    url = f"{OIDC_SERVER_URL}/admin/{endpoint}"
     global access_token
     headers = {
         "Content-Type": "application/json",
@@ -181,7 +181,7 @@ if __name__ == "__main__":
         pass
 
     # Write property P=1 to the .env file
-    set_key(env_file, "KEYCLOAK_URL", KEYCLOAK_URL)
+    set_key(env_file, "OIDC_SERVER_URL", OIDC_SERVER_URL)
     set_key(env_file, "REALM", realm_name)
     set_key(env_file, "CLIENT_ID", client_name)
     set_key(env_file, "CLIENT_SECRET", client_secret)

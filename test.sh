@@ -1,9 +1,5 @@
 #!/bin/bash
 
-## Docker setup
-# https://medium.com/@buffetbenjamin/securing-fastapi-with-keycloak-part-2-a-tale-of-roles-660ab5963ee5
-
-
 if [ -f .env ]; then
     source .env
 else
@@ -14,7 +10,7 @@ echo $REALM
 
 read_token(){
   username="$1"
-  response=$(curl -s -X POST "${KEYCLOAK_URL}/realms/${REALM}/protocol/openid-connect/token" \
+  response=$(curl -s -X POST "${OIDC_SERVER_URL}/realms/${REALM}/protocol/openid-connect/token" \
      -H "Content-Type: application/x-www-form-urlencoded" \
      -d "client_id=${CLIENT_ID}" \
      -d "client_secret=${CLIENT_SECRET}" \

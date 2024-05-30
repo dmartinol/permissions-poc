@@ -1,5 +1,5 @@
 from auth.auth_manager import AuthManager, AllowAll
-from auth.keycloak_auth_manager import KeycloakAuthManager
+from auth.oidc_auth_manager import OidcAuthManager
 from auth.kubernetes_auth_manager import KubernetesAuthManager
 import os
 from fastapi import Request
@@ -16,8 +16,8 @@ def _init_auth_manager():
     global _auth_manager
     auth_manager = os.getenv("AUTH_MANAGER", "").lower()
     print(f"Creating AuthManager for {auth_manager}")
-    if auth_manager == "keycloak":
-        _auth_manager = KeycloakAuthManager()
+    if auth_manager == "oidc":
+        _auth_manager = OidcAuthManager()
     elif auth_manager == "k8s":
         _auth_manager = KubernetesAuthManager()
     else:
