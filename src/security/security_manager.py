@@ -1,4 +1,5 @@
 from typing import List, Optional, Union
+from contextvars import ContextVar
 
 from security.enforcer import PolicyEnforcer
 from security.permissions import AuthzedAction, Permission
@@ -57,10 +58,12 @@ class SecurityManager:
         self._role_manager: RoleManager = role_manager
         self._policy_enforcer: PolicyEnforcer = policy_enforcer
         self._permissions: List[Permission] = permissions
-        self._current_user: str = None
+        self._current_user: ContextVar[Optional[str]] = ContextVar(
+            "current_user", default=None
+        )
 
     def set_current_user(self, user: str):
-        self._current_user = user
+        self._current_user.set(user)
 
     @property
     def role_manager(self) -> RoleManager:
@@ -72,7 +75,7 @@ class SecurityManager:
 
     @property
     def current_user(self) -> str:
-        return self._current_user
+        return self._current_user.get()
 
     @property
     def permissions(self) -> List[Permission]:
@@ -90,7 +93,7 @@ class SecurityManager:
         result, explain = self._policy_enforcer.enforce_policy(
             role_manager=self._role_manager,
             permissions=self._permissions,
-            user=self._current_user,
+            user=self.current_user,
             actions=_actions,
             resource=resource,
         )
