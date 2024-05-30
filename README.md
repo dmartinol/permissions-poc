@@ -2,9 +2,9 @@
 # Permissions POC
 Scope of this POC is to validate a fine grained python permission model to:
 * Create permissions on protected objects identified by type and optional filtering criteria
-* Define method level permissions using decorators
+* Define method level permissions using decorators or authorization API
 * Define a pluggable authorization manager to connect to external identity providers (IDP):
-  * OIDC, using Keycloak
+  * OIDC, using Keycloak as an initial example
   * K8s RBAC
 
 This POC is designed to propose an implementation for the `Feast Security model`, as defined in 
