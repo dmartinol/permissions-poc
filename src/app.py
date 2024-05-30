@@ -2,6 +2,8 @@ from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse
 from impl import ResourceA, ResourceB
 from auth import inject_user_data
+from orchestator import Orchestrator
+from security.security_manager import _get_security_manager
 
 app = FastAPI()
 
@@ -63,3 +65,11 @@ async def edit_A():
 async def edit_B():
     b.edit_protected()
     return {"message": "edit_B"}
+
+
+@app.post("/do", dependencies=[Depends(inject_user_data)])
+async def do_something():
+    orchestrator = Orchestrator(_get_security_manager())
+
+    messages = orchestrator.do_something(a, b)
+    return messages

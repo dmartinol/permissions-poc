@@ -37,7 +37,8 @@ the `READ` action:
 Two resource types are available, namely `ResourceA` and `ResourceB`, both in the [impl](./src/impl.py) module.
 They extend a generic `Resource` class to expose `get_name`, `get_type` and `get_tags` methods.
 
-Example of security configuration:
+## Protecting resources with decorators
+Example of security configuration using decorators:
 ```py
     @require_permissions(actions=[AuthzedAction.READ])
     def read_protected(self):
@@ -46,8 +47,15 @@ Example of security configuration:
 
 The `require_permissions` decorator defines the actions that must be permitted to the user.
 
-**Note**: even if not used in the POC, a programmatic security can be applied when the decorator pattern cannot be used, with the
-APIs defined in the `SecurityManager` class, in [security_manager](./src/security/security_manager.py) module
+## Protecting resources with API
+A programmatic security can be applied when the decorator pattern cannot be used, with the
+APIs defined in the `SecurityManager` class, in [security_manager](./src/security/security_manager.py) module:
+
+```py
+    a : ResourceA = ...
+    sm = _get_seccurity_manager()
+    self.sm.assert_permissions(a, AuthzedAction.EDIT)
+```
 
 ## Security modules
 The security modules include:

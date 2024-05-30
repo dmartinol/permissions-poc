@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from security.enforcer import PolicyEnforcer
 from security.permissions import AuthzedAction, Permission
@@ -81,13 +81,17 @@ class SecurityManager:
     def assert_permissions(
         self,
         resource: Resource,
-        actions: List[AuthzedAction],
+        actions: Union[AuthzedAction, List[AuthzedAction]],
     ):
+        _actions = actions
+        if isinstance(actions, AuthzedAction):
+            _actions = [actions]
+
         result, explain = self._policy_enforcer.enforce_policy(
             role_manager=self._role_manager,
             permissions=self._permissions,
             user=self._current_user,
-            actions=actions,
+            actions=_actions,
             resource=resource,
         )
         if not result:

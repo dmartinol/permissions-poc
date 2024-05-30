@@ -27,15 +27,17 @@ read_token(){
 read_service(){
   local access_token="$1"
   local service_path="$2"
-  echo "Trying GET http://localhost:8000${service_path}"
-  curl -X GET "http://localhost:8000${service_path}" \
-      -H "Content-Type: application/json" \
-      -H "Authorization: Bearer $access_token"
+  if [ "$service_path" != "/do" ]; then
+    echo "Trying GET http://localhost:8000${service_path}"
+    curl -s -X GET "http://localhost:8000${service_path}" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $access_token" | jq
+  fi
   echo ""
   echo "Trying POST http://localhost:8000${service_path}"
-  curl -X POST "http://localhost:8000${service_path}" \
+  curl -s -X POST "http://localhost:8000${service_path}" \
       -H "Content-Type: application/json" \
-      -H "Authorization: Bearer $access_token"
+      -H "Authorization: Bearer $access_token" | jq
 }
 
 read -p "Is it a secured service? (y/n): " IS_SECURED
