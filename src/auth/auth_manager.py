@@ -20,5 +20,13 @@ class AuthManager(ABC):
 
 
 class AllowAll(AuthManager):
+    def init(self) -> None:
+        from security.security_manager import (
+            DefaultSecurityManager,
+            _set_security_manager,
+        )
+
+        _set_security_manager(DefaultSecurityManager())
+
     async def inject_user_data(self, request: Request) -> Any:
         return True

@@ -37,6 +37,21 @@ the `READ` action:
 Two resource types are available, namely `ResourceA` and `ResourceB`, both in the [impl](./src/impl.py) module.
 They extend a generic `Resource` class to expose `get_name`, `get_type` and `get_tags` methods.
 
+An `Orchestrator` class is defined in the [orchestrator](./src/orchestator.py) module with a method
+```py
+def do_something(self, a: ResourceA, b: ResourceB) -> List[str]:
+```
+
+to invoke all the available methods on `a` and `b`, catching errors and returning a summarized execution report, like:
+```json
+[
+  "DONE a.read_protected()",
+  "No permissions to execute [<AuthzedAction.READ: 'read'>] on AuthzedResourceType.B:b. Requires roles ['b-reader', 'b-editor']",
+  "No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.A:a. Requires roles ['a-editor']",
+  "No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.B:b. Requires roles ['b-reader', 'b-editor']"
+]
+```
+
 ## Protecting resources with decorators
 Example of security configuration using decorators:
 ```py
@@ -126,6 +141,15 @@ Validate the app with unit tests:
 make test
 ```
 
+### Overview of service endpoints
+The [app](./src/app.py) module creates a `FastAPI` application with the following endpoints:
+* `GET /a`: invokes `read_protected` on an instance of `ResourceA`
+* `GET /b`: invokes `read_protected` on an instance of `ResourceB`
+* `POST /a`: invokes `edit_protected` on an instance of `ResourceA`
+* `POST /b`: invokes `edit_protected` on an instance of `ResourceB`
+* `GET /` and `POST /`: invoke `unprotected` on an instance of `ResourceA` and then `ResourceB`
+* `POST /do`: invoke the `do_something` method on an instance of `Orchestrator`
+
 ### Run the insecure app
 ```console
 AUTH_MANAGER="" make run-app
@@ -135,27 +159,53 @@ Follow the interactive instructions and test with:
 ```console
 make run-test
 ```
+
 Output example (all services are allowed, there is no current user in place):
 ```bash
 Is it a secured service? (y/n): n
 
 Enter the service path, e.g. '/a' (RETURN to stop): /a
 Trying GET http://localhost:8000/a
-{"message":"read_A"}
+{
+  "message": "read_A"
+}
+
 Trying POST http://localhost:8000/a
-{"message":"edit_A"}
+{
+  "message": "edit_A"
+}
 
 Enter the service path, e.g. '/a' (RETURN to stop): /b
 Trying GET http://localhost:8000/b
-{"message":"read_B"}
-Trying POST http://localhost:8000/b
-{"message":"edit_B"}
+{
+  "message": "read_B"
+}
 
-Enter the service path, e.g. '/a' (RETURN to stop): / 
+Trying POST http://localhost:8000/b
+{
+  "message": "edit_B"
+}
+
+Enter the service path, e.g. '/a' (RETURN to stop): /do
+
+Trying POST http://localhost:8000/do
+[
+  "DONE a.read_protected()",
+  "DONE b.read_protected()",
+  "DONE a.edit_protected()",
+  "DONE b.edit_protected()"
+]
+
+Enter the service path, e.g. '/a' (RETURN to stop): /
 Trying GET http://localhost:8000/
-{"message":"read_unprotected"}
+{
+  "message": "read_unprotected"
+}
+
 Trying POST http://localhost:8000/
-{"message":"post_unprotected"}
+{
+  "message": "post_unprotected"
+}
 ```
 
 ### Run app secured by Keycloak
@@ -213,36 +263,78 @@ Output example for user `a-reader` (allowed to `GET \a`):
 ```bash
 Is it a secured service? (y/n): y
 Enter your username: a-reader
+Got token!
 
 Enter the service path, e.g. '/a' (RETURN to stop): /a
 Trying GET http://localhost:8000/a
-{"message":"read_A"}
+{
+  "message": "read_A"
+}
+
 Trying POST http://localhost:8000/a
-{"message":"No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.A:a. Requires roles ['a-editor']"}
+{
+  "message": "No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.A:a. Requires roles ['a-editor']"
+}
 
 Enter the service path, e.g. '/a' (RETURN to stop): /b
 Trying GET http://localhost:8000/b
-{"message":"No permissions to execute [<AuthzedAction.READ: 'read'>] on AuthzedResourceType.B:b. Requires roles ['b-reader', 'b-editor']"}
+{
+  "message": "No permissions to execute [<AuthzedAction.READ: 'read'>] on AuthzedResourceType.B:b. Requires roles ['b-reader', 'b-editor']"
+}
+
 Trying POST http://localhost:8000/b
-{"message":"No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.B:b. Requires roles ['b-reader', 'b-editor']"}
+{
+  "message": "No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.B:b. Requires roles ['b-reader', 'b-editor']"
+}
+
+Enter the service path, e.g. '/a' (RETURN to stop): /do
+
+Trying POST http://localhost:8000/do
+[
+  "DONE a.read_protected()",
+  "No permissions to execute [<AuthzedAction.READ: 'read'>] on AuthzedResourceType.B:b. Requires roles ['b-reader', 'b-editor']",
+  "No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.A:a. Requires roles ['a-editor']",
+  "No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.B:b. Requires roles ['b-reader', 'b-editor']"
+]
 ```
 
-Output example for user `b-manager` (allowed to `GET \a` and `POST \b`):
+Output example for user `b-manager` (allowed to `GET \b` and `POST \b`):
 ```bash
 Is it a secured service? (y/n): y
 Enter your username: b-manager
+Got token!
 
 Enter the service path, e.g. '/a' (RETURN to stop): /a
 Trying GET http://localhost:8000/a
-{"message":"No permissions to execute [<AuthzedAction.READ: 'read'>] on AuthzedResourceType.A:a. Requires roles ['a-reader']"}
+{
+  "message": "No permissions to execute [<AuthzedAction.READ: 'read'>] on AuthzedResourceType.A:a. Requires roles ['a-reader']"
+}
+
 Trying POST http://localhost:8000/a
-{"message":"No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.A:a. Requires roles ['a-editor']"}
+{
+  "message": "No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.A:a. Requires roles ['a-editor']"
+}
 
 Enter the service path, e.g. '/a' (RETURN to stop): /b
 Trying GET http://localhost:8000/b
-{"message":"read_B"}
+{
+  "message": "read_B"
+}
+
 Trying POST http://localhost:8000/b
-{"message":"edit_B"}
+{
+  "message": "edit_B"
+}
+
+Enter the service path, e.g. '/a' (RETURN to stop): /do
+
+Trying POST http://localhost:8000/do
+[
+  "No permissions to execute [<AuthzedAction.READ: 'read'>] on AuthzedResourceType.A:a. Requires roles ['a-reader']",
+  "DONE b.read_protected()",
+  "No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.A:a. Requires roles ['a-editor']",
+  "DONE b.edit_protected()"
+]
 ```
 
 ### Run app secured by Kubernetes tokens

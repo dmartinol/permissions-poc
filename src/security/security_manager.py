@@ -98,6 +98,18 @@ class SecurityManager:
             raise PermissionError(explain)
 
 
+class DefaultSecurityManager(SecurityManager):
+    def __init__(self):
+        super().__init__(role_manager=None, permissions=[], policy_enforcer=None)
+
+    def assert_permissions(
+        self,
+        resource: Resource,
+        actions: Union[AuthzedAction, List[AuthzedAction]],
+    ):
+        return True
+
+
 _sm: SecurityManager = None
 
 
