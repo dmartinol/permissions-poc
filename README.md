@@ -141,7 +141,8 @@ Validate the app with unit tests:
 make test
 ```
 
-### Overview of service endpoints
+### Securing a REST service (with FastAPI)
+#### Overview of service endpoints
 The [app](./src/app.py) module creates a `FastAPI` application with the following endpoints:
 * `GET /a`: invokes `read_protected` on an instance of `ResourceA`
 * `GET /b`: invokes `read_protected` on an instance of `ResourceB`
@@ -150,7 +151,7 @@ The [app](./src/app.py) module creates a `FastAPI` application with the followin
 * `GET /` and `POST /`: invoke `unprotected` on an instance of `ResourceA` and then `ResourceB`
 * `POST /do`: invoke the `do_something` method on an instance of `Orchestrator`
 
-### Run the insecure app
+#### Run the insecure app
 ```console
 AUTH_MANAGER="" make run-app
 ```
@@ -208,9 +209,9 @@ Trying POST http://localhost:8000/
 }
 ```
 
-### Run app secured by Keycloak OIDC
+#### Run app secured by Keycloak OIDC
 
-#### Setup Keycloak
+##### Setup Keycloak
 Start Keycloak from a container image and initialize a `poc` realm with `app` client and some users:
 ```
 make start-keycloak
@@ -248,7 +249,7 @@ Example of access token:
 }
 ```
 
-#### Run app with Keycloak OIDC
+##### Run app with Keycloak OIDC
 Use the `AUTH_MANAGER` variable to setup the OIDC authentication manager:
 ```console
 AUTH_MANAGER=oidc make run-app
@@ -337,8 +338,8 @@ Trying POST http://localhost:8000/do
 ]
 ```
 
-### Run app secured by Kubernetes tokens
-#### Architecture of KubernetesAuthManager
+#### Run app secured by Kubernetes tokens
+##### Architecture of KubernetesAuthManager
 This authentication manager is made of two components, both running in the same cluster:
 * The client invokes REST services sending the token of the associated `ServiceAccount` in the authorization bearer (*)
 * The server, implemented by `KubernetesAuthManager` defined in [kubernetes_auth_manager](./src/auth/kubernetes_auth_manager.py) is in charge of:
@@ -389,7 +390,7 @@ offline_store:
 (*) **Note**: because of the need to retrieve the `ClusterRole`s, the server needs to run with a role allowing it to fetch such instances.
 For now, we are using `admin ClusterRole`, but a dedicated `Role` can be revised and specifically defined.
 
-#### Deploying the POC app in kubernetes
+##### Deploying the POC app in kubernetes
 Use the provided [app.yaml](./app.yaml) to create the required resources in the current namespace:
 * A `poc-app` deployment
 * All the managed `Role`s
@@ -428,6 +429,101 @@ A client notebook [poc-client.ipynb](./poc-client.ipynb) is provided for your co
 Install it on a Notebook in the same cluster and run the test to validate that a `Forbidden` error (403) is raised when
 we invoke a service wiythout having the required role.
 
+### Securing an ArrowFlight grpc service
+#### Solution overview
+The proposed implementation uses an implementation of [ServerMiddlewareFactory](https://arrow.apache.org/docs/python/generated/pyarrow.flight.ServerMiddlewareFactory.html)
+to intercept a request, extract the `authorization` bearer token and use the `OidcAuthManager` instance to extract the user
+credentials and roles. This data is then passed to a middleware instance that can be used at the begin of the protected endpoints 
+(e.g. in `do_get`) to apply the authentication context to the current thread.
+
+Proposed implementation is in [server](./src/arrow_flight/server.py) and [middleware](./src/arrow_flight/middleware.py) modules.
+
+#### Overview of service endpoints
+The [server](./src/arrow_flight/server.py) module creates an `ArrowFlight` application with the following endpoints:
+* `do_get`: invokes `read_protected` on an instance of `ResourceA`
+* `do_put`, `do_action`: not implemented
+
+#### Run the insecure app
+```console
+AUTH_MANAGER="" make run-arrow-server
+```
+
+Follow the interactive instructions and test with:
+```console
+AUTH_MANAGER="" make run-arrow-client
+```
+
+Output example (all services are allowed, there is no current user in place):
+```bash
+*** Trying read on AuthzedResourceType.A
+{
+    "name": "AuthzedResourceType.A:a",
+    "message": "read"
+}
+*** Trying edit on AuthzedResourceType.A
+{
+    "name": "AuthzedResourceType.A:a",
+    "message": "edit"
+}
+*** Trying read on AuthzedResourceType.B
+{
+    "name": "AuthzedResourceType.B:b",
+    "message": "read"
+}
+*** Trying edit on AuthzedResourceType.B
+{
+    "name": "AuthzedResourceType.B:b",
+    "message": "edit"
+}
+```
+
+##### Run app with Keycloak OIDC
+Use the `AUTH_MANAGER` variable to setup the OIDC authentication manager:
+```console
+AUTH_MANAGER="oidc" make run-arrow-server
+```
+
+Test with:
+```console
+AUTH_MANAGER="oidc" make run-arrow-client
+```
+
+Output example for user `a-reader` (allowed to read from A):
+```bash
+Please enter the user name: a-reader
+Got token for a-reader
+*** Trying read on AuthzedResourceType.A
+{
+    "name": "AuthzedResourceType.A:a",
+    "message": "read"
+}
+*** Trying edit on AuthzedResourceType.A
+No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.A:a. Requires roles ['a-editor']
+*** Trying read on AuthzedResourceType.B
+No permissions to execute [<AuthzedAction.READ: 'read'>] on AuthzedResourceType.B:b. Requires roles ['b-reader', 'b-editor']
+*** Trying edit on AuthzedResourceType.B
+No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.B:b. Requires roles ['b-reader', 'b-editor']
+```
+
+Output example for user `b-manager` (allowed to read and edit from B):
+```bash
+Please enter the user name: b-manager
+Got token for b-manager
+*** Trying read on AuthzedResourceType.A
+No permissions to execute [<AuthzedAction.READ: 'read'>] on AuthzedResourceType.A:a. Requires roles ['a-reader']
+*** Trying edit on AuthzedResourceType.A
+No permissions to execute [<AuthzedAction.EDIT: 'edit'>] on AuthzedResourceType.A:a. Requires roles ['a-editor']
+*** Trying read on AuthzedResourceType.B
+{
+    "name": "AuthzedResourceType.B:b",
+    "message": "read"
+}
+*** Trying edit on AuthzedResourceType.B
+{
+    "name": "AuthzedResourceType.B:b",
+    "message": "edit"
+}
+```
 
 ## What's next-Possible extensions
 * The proposed Security Model is meant to define the policies to permit the execution of given actions on the selected resources.

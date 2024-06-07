@@ -17,6 +17,34 @@
         "AUTH_MANAGER": "oidc"
       },
       "jinja": true
+    },
+    {
+      "name": "Arrow Client",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "cwd": "${workspaceFolder}/src",
+      "args": [
+        "arrow_flight.client:client",
+      ],
+      "env": {
+        "AUTH_MANAGER": "oidc"
+      },
+      "jinja": true
+    },
+    {
+      "name": "Arrow Server",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "cwd": "${workspaceFolder}/src",
+      "args": [
+        "arrow_flight.server:server",
+      ],
+      "env": {
+        "AUTH_MANAGER": "oidc"
+      },
+      "jinja": true
     }
   ]
 }

@@ -11,7 +11,7 @@ from fastapi.security import OAuth2AuthorizationCodeBearer
 from auth.auth_manager import AuthManager
 from jwt import PyJWKClient
 import jwt
-from typing import Any
+from typing import Any, Optional, List
 from dotenv import load_dotenv
 import os
 
@@ -56,16 +56,23 @@ class OidcAuthManager(AuthManager):
         """
 
         access_token = await oauth_2_scheme(request=request)
+        current_user, roles = self.user_details_from_access_token(access_token)
+        sm = _get_security_manager()
+        sm.set_current_user(current_user)
+        sm.role_manager.clear()
+        sm.role_manager.add_roles_for_user(current_user, roles)
+
+    def user_details_from_access_token(
+        self, access_token: Optional[str]
+    ) -> (str, List[str]):
         global OIDC_SERVER_URL
         global REALM
         global CLIENT_ID
         url = f"{OIDC_SERVER_URL}/realms/{REALM}/protocol/openid-connect/certs"
-        print(url)
         optional_custom_headers = {"User-agent": "custom-user-agent"}
         jwks_client = PyJWKClient(url, headers=optional_custom_headers)
 
         try:
-            print(access_token)
             signing_key = jwks_client.get_signing_key_from_jwt(access_token)
             data = jwt.decode(
                 access_token,
@@ -78,9 +85,6 @@ class OidcAuthManager(AuthManager):
             current_user = data["preferred_username"]
             roles = data["resource_access"][f"{CLIENT_ID}"]["roles"]
             print(f"Running for user {current_user} with roles {roles}")
-            sm = _get_security_manager()
-            sm.set_current_user(current_user)
-            sm.role_manager.clear()
-            sm.role_manager.add_roles_for_user(current_user, roles)
+            return (current_user, roles)
         except jwt.exceptions.InvalidTokenError:
             raise HTTPException(status_code=401, detail="Not authenticated")

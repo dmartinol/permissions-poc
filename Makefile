@@ -14,6 +14,12 @@ test: lint ## Run unit tests
 run-app: ## Run app at default port
 	cd src; uvicorn app:app --host 0.0.0.0 --reload
 
+run-arrow-server: ## Run arrow server
+	cd src; python -m arrow_flight.server
+
+run-arrow-client: ## Run arrow client
+	cd src; python -m arrow_flight.client
+
 run-test: ## Run test client
 	./test.sh
 

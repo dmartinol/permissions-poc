@@ -8,3 +8,4 @@ PyJWT
 kubernetes
 python-dotenv
 cryptography
+pyarrow
