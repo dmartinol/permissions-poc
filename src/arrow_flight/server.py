@@ -79,7 +79,7 @@ class PocFlightServer(fl.FlightServerBase):
 
         api = command["api"]
 
-        print(f"Executing API {api} on {resource}, {ResourceA.__name__}")
+        print(f"Executing API {api} on {resource}")
         resource: Resource
         try:
             if resource == AuthzedResourceType.A.value:

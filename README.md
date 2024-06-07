@@ -440,7 +440,15 @@ Proposed implementation is in [server](./src/arrow_flight/server.py) and [middle
 
 #### Overview of service endpoints
 The [server](./src/arrow_flight/server.py) module creates an `ArrowFlight` application with the following endpoints:
-* `do_get`: invokes `read_protected` on an instance of `ResourceA`
+* `do_get`: given a command including a JSON payload like:
+```json
+{
+  "resource": "A",
+  "api": "read",
+}
+```
+
+it invokes the requested `api` on a new instance of the given `resource` type
 * `do_put`, `do_action`: not implemented
 
 #### Run the insecure app
