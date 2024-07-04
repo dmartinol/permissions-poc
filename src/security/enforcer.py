@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 from security.permissions import AuthzedAction, Permission
 from resources import Resource
 from security.role_manager import RoleManager
@@ -14,11 +12,11 @@ class PolicyEnforcer:
     def enforce_policy(
         self,
         role_manager: RoleManager,
-        permissions: List[Permission],
+        permissions: list[Permission],
         user: str,
         resource: Resource,
-        actions: List[AuthzedAction],
-    ) -> Tuple[bool, str]:
+        actions: list[AuthzedAction],
+    ) -> tuple[bool, str]:
         if permissions == []:
             return (True, "")
         for p in permissions:

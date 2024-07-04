@@ -1,5 +1,5 @@
 import enum
-from typing import List, Optional, Dict
+from typing import Optional
 
 
 class AuthzedResourceType(enum.Enum):
@@ -21,8 +21,8 @@ class AuthzedResource:
     def __init__(
         self,
         type: AuthzedResourceType,
-        name_patterns: Optional[List[str]] = [],
-        required_tags: Optional[Dict[str, str]] = {},
+        name_patterns: Optional[list[str]] = [],
+        required_tags: Optional[dict[str, str]] = {},
     ):
         self.type = type
         self.name_patterns = name_patterns

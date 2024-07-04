@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Optional, Union
 from contextvars import ContextVar
 
 from security.enforcer import PolicyEnforcer
@@ -7,7 +7,7 @@ from resources import Resource
 from security.role_manager import RoleManager
 
 
-def require_permissions(actions: Optional[List[AuthzedAction]] = [AuthzedAction.ALL]):
+def require_permissions(actions: Optional[list[AuthzedAction]] = [AuthzedAction.ALL]):
     """
     A decorator to define the actions that are executed from within the current class method and that must be protected
     against unauthorized access.
@@ -53,11 +53,11 @@ class SecurityManager:
         self,
         role_manager: RoleManager,
         policy_enforcer: PolicyEnforcer,
-        permissions: List[Permission] = [],
+        permissions: list[Permission] = [],
     ):
         self._role_manager: RoleManager = role_manager
         self._policy_enforcer: PolicyEnforcer = policy_enforcer
-        self._permissions: List[Permission] = permissions
+        self._permissions: list[Permission] = permissions
         self._current_user: ContextVar[Optional[str]] = ContextVar(
             "current_user", default=None
         )
@@ -78,13 +78,13 @@ class SecurityManager:
         return self._current_user.get()
 
     @property
-    def permissions(self) -> List[Permission]:
+    def permissions(self) -> list[Permission]:
         return self._permissions
 
     def assert_permissions(
         self,
         resource: Resource,
-        actions: Union[AuthzedAction, List[AuthzedAction]],
+        actions: Union[AuthzedAction, list[AuthzedAction]],
     ):
         _actions = actions
         if isinstance(actions, AuthzedAction):
@@ -108,7 +108,7 @@ class DefaultSecurityManager(SecurityManager):
     def assert_permissions(
         self,
         resource: Resource,
-        actions: Union[AuthzedAction, List[AuthzedAction]],
+        actions: Union[AuthzedAction, list[AuthzedAction]],
     ):
         return True
 

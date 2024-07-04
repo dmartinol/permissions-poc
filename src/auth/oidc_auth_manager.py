@@ -11,7 +11,7 @@ from fastapi.security import OAuth2AuthorizationCodeBearer
 from auth.auth_manager import AuthManager
 from jwt import PyJWKClient
 import jwt
-from typing import Any, Optional, List
+from typing import Any, Optional
 from dotenv import load_dotenv
 import os
 
@@ -64,7 +64,7 @@ class OidcAuthManager(AuthManager):
 
     def user_details_from_access_token(
         self, access_token: Optional[str]
-    ) -> (str, List[str]):
+    ) -> (str, list[str]):
         global OIDC_SERVER_URL
         global REALM
         global CLIENT_ID

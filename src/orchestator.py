@@ -1,15 +1,14 @@
 from impl import ResourceA, ResourceB
 from security.permissions import AuthzedAction
 from security.security_manager import SecurityManager
-from typing import List
 
 
 class Orchestrator:
     def __init__(self, sm: SecurityManager) -> None:
         self.sm = sm
 
-    def do_something(self, a: ResourceA, b: ResourceB) -> List[str]:
-        messages: List[str] = []
+    def do_something(self, a: ResourceA, b: ResourceB) -> list[str]:
+        messages: list[str] = []
         # Read from A
         try:
             print(f"Trying read from {a}")

@@ -29,46 +29,46 @@ b = ResourceB("b", [])
 
 
 @app.get("/")
-async def read_unprotected():
+def read_unprotected():
     a.unprotected()
     b.unprotected()
     return {"message": "read_unprotected"}
 
 
 @app.get("/a", dependencies=[Depends(inject_user_data)])
-async def read_A():
+def read_A():
     a.read_protected()
 
     return {"message": "read_A"}
 
 
 @app.get("/b", dependencies=[Depends(inject_user_data)])
-async def read_B():
+def read_B():
     b.read_protected()
     return {"message": "read_B"}
 
 
 @app.post("/")
-async def post_unprotected():
+def post_unprotected():
     a.unprotected()
     b.unprotected()
     return {"message": "post_unprotected"}
 
 
 @app.post("/a", dependencies=[Depends(inject_user_data)])
-async def edit_A():
+def edit_A():
     a.edit_protected()
     return {"message": "edit_A"}
 
 
 @app.post("/b", dependencies=[Depends(inject_user_data)])
-async def edit_B():
+def edit_B():
     b.edit_protected()
     return {"message": "edit_B"}
 
 
 @app.post("/do", dependencies=[Depends(inject_user_data)])
-async def do_something():
+def do_something():
     orchestrator = Orchestrator(_get_security_manager())
 
     messages = orchestrator.do_something(a, b)

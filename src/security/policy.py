@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import List
 
 
 class Policy(ABC):
@@ -20,7 +19,7 @@ class RoleBasedPolicy(Policy):
 
     def __init__(
         self,
-        roles: List[str],
+        roles: list[str],
     ):
         self.roles = roles
 

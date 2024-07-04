@@ -1,7 +1,6 @@
 import pyarrow.flight as fl
 import os
 from auth import get_auth_manager_instance
-from typing import List
 
 
 class AuthorizationMiddlewareFactory(fl.ServerMiddlewareFactory):
@@ -26,7 +25,7 @@ class AuthorizationMiddlewareFactory(fl.ServerMiddlewareFactory):
 
 
 class AuthorizationMiddleware(fl.ServerMiddleware):
-    def __init__(self, current_user: str, roles: List[str]):
+    def __init__(self, current_user: str, roles: list[str]):
         self.current_user = current_user
         self.roles = roles
 

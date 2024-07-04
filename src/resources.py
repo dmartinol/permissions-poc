@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List
 
 from security.authzed_resource import AuthzedResourceType
 
 
 class Resource(ABC):
-    def __init__(self, name: str, tags: Dict[str, str]):
+    def __init__(self, name: str, tags: dict[str, str]):
         self.name = name
         self.tags = tags
 
@@ -16,5 +15,5 @@ class Resource(ABC):
     def get_type(self) -> AuthzedResourceType:
         raise NotImplementedError
 
-    def get_tags(self) -> List[str]:
+    def get_tags(self) -> list[str]:
         return self.tags

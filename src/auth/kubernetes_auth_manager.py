@@ -7,7 +7,7 @@ from security.security_manager import (
 )
 from security.role_manager import RoleManager
 from auth.auth_manager import AuthManager
-from typing import List, Dict, Any
+from typing import Any
 from fastapi import Request
 from starlette.authentication import (
     AuthenticationError,
@@ -53,9 +53,7 @@ class KubernetesAuthManager(AuthManager):
         sm.role_manager.clear()
         sm.role_manager.add_roles_for_user(current_user, roles)
 
-    def get_roles(
-        self, namespace: str, service_account_name: str
-    ) -> Dict[str, List[str]]:
+    def get_roles(self, namespace: str, service_account_name: str) -> list[str]:
         role_bindings = self.rbac_v1.list_namespaced_role_binding(namespace)
         cluster_role_bindings = self.rbac_v1.list_cluster_role_binding()
 

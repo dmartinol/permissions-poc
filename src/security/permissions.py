@@ -1,5 +1,5 @@
 import enum
-from typing import Dict, List, Optional
+from typing import Optional
 
 from security.authzed_resource import AuthzedResource, AuthzedResourceType
 from security.policy import Policy, RoleBasedPolicy
@@ -35,9 +35,9 @@ class Permission:
     def __init__(
         self,
         name: str,
-        resources: List[AuthzedResource] = [AuthzedResource(AuthzedResourceType.ALL)],
-        actions: Optional[List[AuthzedAction]] = [AuthzedAction.ALL],
-        policies: Optional[List[Policy]] = [],  # Equivalent to allow-all
+        resources: list[AuthzedResource] = [AuthzedResource(AuthzedResourceType.ALL)],
+        actions: Optional[list[AuthzedAction]] = [AuthzedAction.ALL],
+        policies: Optional[list[Policy]] = [],  # Equivalent to allow-all
         decision_strategy: Optional[DecisionStrategy] = DecisionStrategy.UNANIMOUS,
     ):
         self._name = name
@@ -70,9 +70,9 @@ class Permission:
     def with_permission_to_read(
         cls,
         name: str,
-        roles: List[str],
-        name_patterns: Optional[List[str]] = [],
-        required_tags: Optional[Dict[str, str]] = {},
+        roles: list[str],
+        name_patterns: Optional[list[str]] = [],
+        required_tags: Optional[dict[str, str]] = {},
         decision_strategy: Optional[DecisionStrategy] = DecisionStrategy.AFFIRMATIVE,
     ):
         return cls(
@@ -93,9 +93,9 @@ class Permission:
     def with_permission_to_write(
         cls,
         name: str,
-        roles: List[str],
-        name_patterns: Optional[List[str]] = [],
-        required_tags: Optional[Dict[str, str]] = {},
+        roles: list[str],
+        name_patterns: Optional[list[str]] = [],
+        required_tags: Optional[dict[str, str]] = {},
         decision_strategy: Optional[DecisionStrategy] = DecisionStrategy.AFFIRMATIVE,
     ):
         return cls(
@@ -119,7 +119,7 @@ class Permission:
                 return True
         return False
 
-    def match_actions(self, actions: List[AuthzedAction]):
+    def match_actions(self, actions: list[AuthzedAction]):
         if AuthzedAction.ALL in self._actions:
             return True
 
